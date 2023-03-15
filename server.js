@@ -38,7 +38,8 @@ function startPrompt(){
             }
         })
         .catch((error) => {
-
+            console.log(error);
+            startPrompt()
         });
 }
 
@@ -87,7 +88,30 @@ function viewAllDepartments() {
 }
 
 function addDepartment() {
-    
+    inquirer
+        .prompt([
+            {
+            type: 'input',
+            name: 'departmentName',
+            message: 'What is the name of the department',
+            },
+        ])
+        .then((data) => {
+            departmentName = data.departmentName.trim()
+            if (departmentName){
+                db.query(`INSERT INTO department (name)
+                          VALUES (?)`,  departmentName,
+                          function (err, results) {
+                            console.log(`Added ${departmentName} to the database`)
+                            startPrompt()
+                        });
+            }
+
+        })
+        .catch((error) => {
+            console.log(error);
+            startPrompt()
+        });
 }
 
 
