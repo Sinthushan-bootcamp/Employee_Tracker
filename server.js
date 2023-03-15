@@ -76,7 +76,42 @@ function viewAllRoles() {
 }
 
 function addRole() {
-    
+    db.query('SELECT * FROM department', function (err, results) {
+        choices = results.map(result => result['name'])
+        inquirer
+        .prompt([
+            {
+            type: 'input',
+            name: 'role',
+            message: 'What is the name of the role?',
+            },
+            {
+            type: 'input',
+            name: 'salary',
+            message: 'What is the salary of the role?',
+            },
+            {
+            type: 'list',
+            name: 'department',
+            message: 'Which department does the role belong to?',
+            choices: choices,
+            },
+        ])
+        .then((data) => {
+            department_id = results.filter(result => result['name'] === data.department)[0]['id']
+            db.query(`INSERT INTO role (title, salary, department_id)
+                          VALUES (?,?,?)`,  [data.role, data.salary, department_id],
+                          function (err, results) {
+                            console.log(`Added ${data.role} to the database`)
+                            startPrompt()
+                    });
+        })
+        .catch((error) => {
+            console.log(error);
+            startPrompt()
+        });
+
+    });
 }
 
 function viewAllDepartments() {
