@@ -56,12 +56,88 @@ function viewAllEmployees() {
             });
 }
 
-function addEmployee() {
-    
+async function addEmployee() {
+    const [roleRows,rolefields] = await db.promise().query( 'SELECT * FROM role');
+    roles = roleRows.map(roleRow => roleRow['title'])
+    const [employeeRows,employeefields] = await db.promise().query( 'SELECT * FROM employee');
+    employees = employeeRows.map(employeeRow => employeeRow['first_name'] + ' ' + employeeRow['last_name'])
+    employees.unshift('none')
+    inquirer
+        .prompt([
+            {
+            type: 'input',
+            name: 'first_name',
+            message: 'What is the first name of the employee?',
+            },
+            {
+            type: 'input',
+            name: 'last_name',
+            message: 'What is the last name of the employee?',
+            },
+            {
+            type: 'list',
+            name: 'role',
+            message: 'What is the employee\'s roles?',
+            choices: roles,
+            },
+            {
+            type: 'list',
+            name: 'manager',
+            message: 'Who is the employee\'s manager?',
+            choices: employees,
+            },
+        ])
+        .then((data) => {
+            role_id = roleRows.filter(roleRow => roleRow['title'] === data.role)[0]['id']
+            manager_id = employeeRows.filter(employeeRow => employeeRow['first_name'] + ' ' + employeeRow['last_name'] === data.manager)[0]['id']
+            db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                          VALUES (?,?,?, ?)`,  [data.first_name, data.last_name, role_id, manager_id],
+                          function (err, results) {
+                            console.log(`Added ${data.first_name + " " + data.last_name} to the database`)
+                            startPrompt()
+                    });
+        })
+        .catch((error) => {
+            console.log(error);
+            startPrompt()
+        });
+
 }
 
-function updateEmployee() {
-    
+async function updateEmployee() {
+    const [roleRows,rolefields] = await db.promise().query( 'SELECT * FROM role');
+    roles = roleRows.map(roleRow => roleRow['title'])
+    const [employeeRows,employeefields] = await db.promise().query( 'SELECT * FROM employee');
+    employees = employeeRows.map(employeeRow => employeeRow['first_name'] + ' ' + employeeRow['last_name'])
+    employees.unshift('none')
+    inquirer
+        .prompt([
+            {
+            type: 'list',
+            name: 'employee',
+            message: 'Which employee\'s role would you like to update?',
+            choices: employees,
+            },
+            {
+            type: 'list',
+            name: 'role',
+            message: 'Which role do you want to assign the selected employee?',
+            choices: roles,
+            },
+        ])
+        .then((data) => {
+            role_id = roleRows.filter(roleRow => roleRow['title'] === data.role)[0]['id']
+            employee_id = employeeRows.filter(employeeRow => employeeRow['first_name'] + ' ' + employeeRow['last_name'] === data.employee)[0]['id']
+            db.query(`UPDATE employee SET role_id = ? WHERE id = ?`,  [role_id, employee_id],
+                          function (err, results) {
+                            console.log(`Updated employee's role`)
+                            startPrompt()
+                    });
+        })
+        .catch((error) => {
+            console.log(error);
+            startPrompt()
+        });
 }
 
 function viewAllRoles() {
